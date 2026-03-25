@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Resuelvemates</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+  background: #f7f4ed;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 16px 60px;
+  color: #1a1a1a;
+}
+h1 { font-size: 1.8rem; font-weight: 900; color: #4a90d9; margin-bottom: 4px; }
+.subtitle { font-size: 1rem; color: #888; margin-bottom: 20px; font-weight: 600; }
+
+/* TABS PRINCIPALES */
+.main-tabs {
+  display: flex;
+  background: #fff;
+  border-radius: 16px;
+  padding: 5px;
+  gap: 4px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  margin-bottom: 22px;
+  width: 100%;
+  max-width: 440px;
+}
+.main-tab {
+  flex: 1;
+  padding: 11px 6px;
+  border: none;
+  border-radius: 12px;
+  background: transparent;
+  font-size: 0.95rem;
+  font-weight: 800;
+  cursor: pointer;
+  color: #888;
+  transition: all 0.2s;
+}
+.main-tab.active { background: #4a90d9; color: white; }
+
+.panel { display: none; width: 100%; flex-direction: column; align-items: center; }
+.panel.active { display: flex; }
+
+/* INPUT CARD */
+.input-card {
+  background: #fff;
+  border-radius: 24px;
+  padding: 24px 28px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  width: 100%;
+  max-width: 440px;
+  margin-bottom: 22px;
+}
+.input-row { display: flex; align-items: center; gap: 16px; justify-content: center; margin-bottom: 18px; }
+.num-input {
+  width: 96px; height: 66px;
+  font-size: 2rem; font-weight: 800; text-align: center;
+  border: 3px solid #ddd; border-radius: 16px;
+  background: #f7f4ed; color: #1a1a1a; outline: none;
+}
+.plus-sign { font-size: 2.2rem; font-weight: 900; color: #4a90d9; }
+.btn-main {
+  width: 100%; padding: 15px;
+  background: #4a90d9; color: white;
+  border: none; border-radius: 16px;
+  font-size: 1.1rem; font-weight: 800; cursor: pointer;
+}
+.btn-main:disabled { opacity: 0.4; cursor: default; }
+
+/* STEP CARDS (modo ver) */
+.steps-wrapper { width: 100%; max-width: 560px; display: flex; flex-direction: column; align-items: center; }
+.nav-card {
+  background: #fff; border-radius: 20px; padding: 14px 18px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  width: 100%; display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;
+}
+.dots { display: flex; gap: 8px; }
+.dot { width: 11px; height: 11px; border-radius: 50%; background: #ddd; display: inline-block; }
+.dot-active { background: #4a90d9; }
+.dot-done { background: #5cb85c; }
+.btn-nav { padding: 9px 18px; border: none; border-radius: 12px; font-size: 0.95rem; font-weight: 800; cursor: pointer; }
+.btn-prev { background: #eee; color: #555; }
+.btn-next { background: #4a90d9; color: white; }
+.btn-nav:disabled { opacity: 0.3; }
+.step-card {
+  background: #fff; border-radius: 24px; padding: 22px 22px 26px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08); width: 100%; max-width: 560px; margin-bottom: 10px;
+}
+.step-label { font-size: 0.88rem; font-weight: 900; color: #e04040; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 18px; }
+.step-body { display: flex; align-items: flex-start; gap: 14px; flex-wrap: wrap; }
+.vertical-sum { font-size: 2.2rem; font-weight: 900; line-height: 1.35; min-width: 76px; }
+.plus-row { font-size: 1.7rem; }
+.divider-line { width: 100%; height: 3px; background: #1a1a1a; border-radius: 2px; margin-top: 4px; }
+.result-num { color: #4a90d9; margin-top: 4px; }
+.blocks-area { display: flex; flex-direction: column; gap: 10px; flex: 1; }
+.blocks-row { display: flex; flex-direction: row; align-items: flex-start; }
+.tens-col { display: flex; flex-direction: row; align-items: flex-start; gap: 4px; min-width: 56px; }
+.ten-bar { width: 15px; height: 52px; background: #f5c800; border-radius: 4px; display: inline-block; flex-shrink: 0; }
+.ten-bar.green { background: #5cb85c; }
+.sep { width: 2px; height: 52px; background: #ccc; border-radius: 2px; margin: 0 8px; flex-shrink: 0; }
+.units-col { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
+.units-row { display: flex; flex-direction: row; gap: 4px; }
+.unit-x { width: 20px; height: 20px; position: relative; display: inline-block; flex-shrink: 0; }
+.unit-x::before, .unit-x::after { content: ''; position: absolute; background: #f5c800; border-radius: 3px; width: 3px; height: 20px; left: 8px; top: 0; }
+.unit-x::before { transform: rotate(45deg); }
+.unit-x::after { transform: rotate(-45deg); }
+.unit-x.green::before, .unit-x.green::after { background: #5cb85c; }
+.right-panel { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 72px; }
+.pill { width: 70px; padding: 6px 8px; border-radius: 14px; text-align: center; font-size: 1.15rem; font-weight: 800; line-height: 1.2; }
+.pill-blue { border: 3px solid #4a90d9; background: transparent; }
+.pill-green { border: 3px solid #5cb85c; background: white; }
+.pill-empty { border: 3px solid #4a90d9; background: transparent; min-height: 48px; }
+.pill-filled { border: 3px solid #4a90d9; background: #e8f4ff; color: #4a90d9; font-size: 1.3rem; }
+.panel-plus { font-size: 0.95rem; font-weight: 900; color: #4a90d9; }
+.panel-line { width: 52px; height: 3px; background: #555; border-radius: 2px; margin: 1px 0; display: block; }
+.panel-dline { display: flex; flex-direction: column; gap: 4px; align-items: center; }
+.explanation { margin-top: 14px; font-size: 0.9rem; font-weight: 600; color: #555; background: #f7f4ed; border-radius: 12px; padding: 11px 13px; line-height: 1.6; }
+.hlr { color: #e04040; font-size: 1.05em; font-weight: 800; }
+.faded { opacity: 0.3; }
+.arrow-down { font-size: 1.2rem; font-weight: 900; color: #f5c800; padding: 2px 0; }
+
+/* ===== MODO PRACTICAR ===== */
+.practica-card {
+  background: #fff; border-radius: 24px; padding: 22px 22px 26px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  width: 100%; max-width: 560px; margin-bottom: 12px;
+  transition: border 0.3s;
+  border: 3px solid transparent;
+}
+.practica-card.correcto { border-color: #5cb85c; background: #f0fff4; }
+.practica-card.bloqueado { opacity: 0.45; pointer-events: none; }
+
+.p-label { font-size: 0.88rem; font-weight: 900; color: #e04040; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; }
+.p-label.ok { color: #5cb85c; }
+
+/* Controles de barras/equis interactivos */
+.p-controls { display: flex; flex-direction: column; gap: 14px; margin-bottom: 14px; }
+.p-row-label { font-size: 0.85rem; font-weight: 800; color: #888; margin-bottom: 6px; }
+.p-blocks-interactive { display: flex; align-items: flex-start; gap: 0; }
+.p-tens-interactive { display: flex; flex-direction: row; align-items: flex-start; gap: 4px; min-width: 56px; flex-wrap: wrap; max-width: 160px; }
+.p-sep { width: 2px; height: 52px; background: #ccc; border-radius: 2px; margin: 0 8px; flex-shrink: 0; }
+.p-units-interactive { display: flex; flex-direction: column; gap: 4px; }
+.p-units-row { display: flex; gap: 4px; }
+
+/* Barra clickeable (añadir/quitar) */
+.btn-bar {
+  width: 15px; height: 52px;
+  background: #f5c800; border-radius: 4px;
+  border: none; cursor: pointer; flex-shrink: 0; padding: 0;
+  transition: background 0.2s, transform 0.1s;
+}
+.btn-bar:active { transform: scale(0.9); }
+.btn-bar.ghost {
+  background: transparent;
+  border: 2px dashed #ddd;
+}
+.btn-x {
+  width: 20px; height: 20px;
+  position: relative; display: inline-block;
+  flex-shrink: 0; cursor: pointer;
+  background: none; border: none; padding: 0;
+}
+.btn-x::before, .btn-x::after {
+  content: ''; position: absolute;
+  background: #f5c800; border-radius: 3px;
+  width: 3px; height: 20px; left: 8px; top: 0;
+}
+.btn-x::before { transform: rotate(45deg); }
+.btn-x::after { transform: rotate(-45deg); }
+.btn-x.ghost::before, .btn-x.ghost::after { background: #ddd; }
+
+.p-stepper { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+.p-stepper-label { font-size: 0.82rem; color: #aaa; font-weight: 600; }
+.btn-minus, .btn-plus {
+  width: 34px; height: 34px;
+  border: 2px solid #ddd; border-radius: 10px;
+  background: #f7f4ed; font-size: 1.3rem; font-weight: 900;
+  cursor: pointer; color: #555; line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+}
+.btn-minus:active, .btn-plus:active { background: #e8f4ff; }
+.p-count { font-size: 1.2rem; font-weight: 900; min-width: 28px; text-align: center; }
+
+/* Panel de inputs para paso 2 */
+.p-panel-inputs { display: flex; flex-direction: column; align-items: center; gap: 5px; min-width: 72px; }
+.p-pill-input {
+  width: 70px; padding: 5px 4px;
+  border-radius: 14px; text-align: center;
+  font-size: 1.15rem; font-weight: 800; line-height: 1.3;
+  border: 3px solid #4a90d9; background: transparent;
+  outline: none; color: #1a1a1a;
+  transition: border-color 0.3s, background 0.3s;
+}
+.p-pill-input.ok { border-color: #5cb85c; background: #f0fff4; color: #5cb85c; }
+.p-pill-input.err { border-color: #e04040; background: #fff0f0; }
+.p-pill-input-result {
+  width: 70px; padding: 5px 4px;
+  border-radius: 14px; text-align: center;
+  font-size: 1.3rem; font-weight: 800;
+  border: 3px solid #4a90d9; background: #e8f4ff;
+  outline: none; color: #4a90d9;
+  transition: border-color 0.3s, background 0.3s;
+}
+.p-pill-input-result.ok { border-color: #5cb85c; background: #f0fff4; color: #5cb85c; }
+.p-pill-input-result.err { border-color: #e04040; }
+
+.p-feedback { font-size: 0.88rem; font-weight: 700; margin-top: 10px; padding: 8px 12px; border-radius: 10px; display: none; }
+.p-feedback.ok { display: block; background: #e8fff0; color: #2e8b57; }
+.p-feedback.err { display: block; background: #fff0f0; color: #c0392b; }
+
+.btn-check {
+  margin-top: 12px; width: 100%;
+  padding: 13px; background: #4a90d9; color: white;
+  border: none; border-radius: 14px;
+  font-size: 1rem; font-weight: 800; cursor: pointer;
+}
+.btn-check:disabled { opacity: 0.35; cursor: default; }
+.btn-check.ok { background: #5cb85c; }
+</style>
+</head>
+<body>
+
+<h1>Resuelvemates</h1>
+<p class="subtitle">Suma paso a paso con bloques</p>
+
+<!-- TABS -->
+<div class="main-tabs">
+  <button class="main-tab active" id="tab-ver" onclick="switchMode('ver')">&#128064; Ver soluci&oacute;n</button>
+  <button class="main-tab" id="tab-practicar" onclick="switchMode('practicar')">&#9997; Practicar</button>
+</div>
+
+<!-- ========== PANEL VER ========== -->
+<div class="panel active" id="panel-ver">
+  <div class="input-card">
+    <div class="input-row">
+      <input class="num-input" id="ver-n1" type="number" min="0" max="99" value="0">
+      <span class="plus-sign">+</span>
+      <input class="num-input" id="ver-n2" type="number" min="0" max="99" value="0">
+    </div>
+    <button class="btn-main" id="btn-ver">Ver paso a paso</button>
+  </div>
+  <div class="steps-wrapper" id="ver-steps"></div>
+</div>
+
+<!-- ========== PANEL PRACTICAR ========== -->
+<div class="panel" id="panel-practicar">
+  <div class="input-card">
+    <div class="input-row">
+      <input class="num-input" id="prac-n1" type="number" min="0" max="99" value="0">
+      <span class="plus-sign">+</span>
+      <input class="num-input" id="prac-n2" type="number" min="0" max="99" value="0">
+    </div>
+    <button class="btn-main" id="btn-practicar">&#9654; Empezar a practicar</button>
+  </div>
+  <div id="practica-steps" style="width:100%;max-width:560px;display:flex;flex-direction:column;align-items:center;"></div>
+</div>
+
+<script>
+/* ===== HELPERS ===== */
+function gid(id) { return document.getElementById(id); }
+
+function switchMode(mode) {
+  gid('panel-ver').classList.toggle('active', mode === 'ver');
+  gid('panel-practicar').classList.toggle('active', mode === 'practicar');
+  gid('tab-ver').classList.toggle('active', mode === 'ver');
+  gid('tab-practicar').classList.toggle('active', mode === 'practicar');
+}
+
+/* ===== DATOS ===== */
+var verStep = 0, verData = null;
+var pracData = null;
+var pracStepOk = [false, false, false, false]; // p1,p2,p3,p4
+
+/* ===== MODO VER ===== */
+gid('btn-ver').onclick = function() {
+  var n1 = parseInt(gid('ver-n1').value)||0;
+  var n2 = parseInt(gid('ver-n2').value)||0;
+  if (n1<0||n1>99||n2<0||n2>99){alert('Usa numeros entre 0 y 99');return;}
+  verData = calcData(n1,n2);
+  verStep = 0;
+  renderVer();
+};
+
+function calcData(n1,n2){
+  var t1=Math.floor(n1/10),u1=n1%10,t2=Math.floor(n2/10),u2=n2%10;
+  return {n1:n1,n2:n2,t1:t1,u1:u1,t2:t2,u2:u2,sumTens:(t1+t2)*10,sumUnits:u1+u2,total:n1+n2};
+}
+
+function getStepList(d){ var s=[0,1]; if(d.sumUnits>=10){s.push(2);} s.push(3); return s; }
+
+function goVerStep(dir){
+  var list=getStepList(verData), max=list.length-1;
+  verStep=Math.max(0,Math.min(max,verStep+dir));
+  renderVer();
+  gid('ver-steps').scrollIntoView();
+}
+
+function renderVer(){
+  var w=gid('ver-steps'); w.innerHTML='';
+  var list=getStepList(verData), maxIdx=list.length-1;
+  var nav=document.createElement('div'); nav.className='nav-card';
+  var bp=document.createElement('button'); bp.className='btn-nav btn-prev'; bp.innerHTML='&larr; Anterior';
+  if(verStep===0){bp.disabled=true;} bp.onclick=function(){goVerStep(-1);};
+  var dd=document.createElement('div'); dd.className='dots';
+  for(var i=0;i<=maxIdx;i++){
+    var d2=document.createElement('div');
+    d2.className='dot'+(i<verStep?' dot-done':'')+(i===verStep?' dot-active':'');
+    dd.appendChild(d2);
+  }
+  var bn=document.createElement('button'); bn.className='btn-nav btn-next'; bn.innerHTML='Siguiente &rarr;';
+  if(verStep===maxIdx){bn.disabled=true;} bn.onclick=function(){goVerStep(1);};
+  nav.appendChild(bp); nav.appendChild(dd); nav.appendChild(bn); w.appendChild(nav);
+  for(var s=0;s<=verStep;s++){ w.appendChild(buildVerCard(list[s],s+1)); }
+}
+
+function buildVerCard(stepId,pNum){
+  var d=verData;
+  var card=document.createElement('div'); card.className='step-card';
+  var lbl=document.createElement('div'); lbl.className='step-label';
+  var body=document.createElement('div'); body.className='step-body';
+  var expl=document.createElement('div'); expl.className='explanation';
+  if(stepId===0){
+    lbl.innerHTML='Paso '+pNum+' &mdash; Representamos los n&uacute;meros';
+    body.appendChild(makeVSum(d.n1,d.n2,null));
+    var ba=document.createElement('div'); ba.className='blocks-area';
+    ba.appendChild(makeRow(d.t1,d.u1,false,false)); ba.appendChild(makeRow(d.t2,d.u2,false,false));
+    body.appendChild(ba);
+    expl.innerHTML='Representamos <b>'+d.n1+'</b> con <b>'+d.t1+' barra'+(d.t1!==1?'s':'')+'</b> y <b>'+d.u1+' equi'+(d.u1!==1?'s':'')+'</b>.<br>Y <b>'+d.n2+'</b> con <b>'+d.t2+' barra'+(d.t2!==1?'s':'')+'</b> y <b>'+d.u2+' equi'+(d.u2!==1?'s':'')+'</b>.';
+  } else if(stepId===1){
+    lbl.innerHTML='Paso '+pNum+' &mdash; Sumamos decenas y unidades';
+    body.appendChild(makeVSum(d.n1,d.n2,null));
+    var ba2=document.createElement('div'); ba2.className='blocks-area';
+    ba2.appendChild(makeRow(d.t1,d.u1,false,false)); ba2.appendChild(makeRow(d.t2,d.u2,false,false));
+    body.appendChild(ba2); body.appendChild(makePanel(d.n1,d.n2,d.sumTens,d.sumUnits,false,null));
+    expl.innerHTML='Decenas: <b>'+d.t1+' + '+d.t2+' = '+(d.t1+d.t2)+'</b> &rarr; <b class="hlr">'+d.sumTens+'</b><br>Unidades: <b>'+d.u1+' + '+d.u2+' = '+(d.u1+d.u2)+'</b> &rarr; <b class="hlr">'+d.sumUnits+'</b>';
+  } else if(stepId===2){
+    var eT=Math.floor(d.sumUnits/10),rU=d.sumUnits%10;
+    lbl.innerHTML='Paso '+pNum+' &mdash; '+d.sumUnits+' equis forman '+eT+' barra nueva!';
+    body.appendChild(makeVSum(d.n1,d.n2,null));
+    var ba3=document.createElement('div'); ba3.className='blocks-area';
+    ba3.appendChild(makeRow(d.t1+d.t2,d.sumUnits,true,false));
+    var arr=document.createElement('div'); arr.className='arrow-down'; arr.innerHTML='&#8595;'; ba3.appendChild(arr);
+    ba3.appendChild(makeRow(d.t1+d.t2+eT,rU,false,false));
+    body.appendChild(ba3); body.appendChild(makePanel(d.n1,d.n2,d.sumTens,d.sumUnits,false,null));
+    expl.innerHTML='Cada <b>10 equis</b> forman <b>1 barra</b>. Nos quedan <b>'+(d.t1+d.t2+eT)+' barra'+((d.t1+d.t2+eT)!==1?'s':'')+'</b> y <b>'+rU+' equi'+(rU!==1?'s':'')+'</b>.';
+  } else {
+    var eT2=Math.floor(d.sumUnits/10),rU2=d.sumUnits%10;
+    lbl.innerHTML='Paso '+pNum+' &mdash; Resultado final!';
+    body.appendChild(makeVSum(d.n1,d.n2,d.total));
+    var ba4=document.createElement('div'); ba4.className='blocks-area';
+    ba4.appendChild(makeRow(d.t1+d.t2+eT2,rU2,false,false));
+    body.appendChild(ba4); body.appendChild(makePanel(d.n1,d.n2,d.sumTens,d.sumUnits,true,d.total));
+    expl.innerHTML='<b>'+d.sumTens+' + '+d.sumUnits+' = <span class="hlr">'+d.total+'</span></b><br>'+d.n1+' + '+d.n2+' = <b>'+d.total+'</b> &#127881;';
+  }
+  card.appendChild(lbl); card.appendChild(body); card.appendChild(expl);
+  return card;
+}
+
+/* ===== HELPERS VISUALES ===== */
+function makeVSum(n1,n2,result){
+  var div=document.createElement('div'); div.className='vertical-sum';
+  var r1=document.createElement('div'); r1.innerHTML=''+n1;
+  var r2=document.createElement('div'); r2.className='plus-row'; r2.innerHTML='+ '+n2;
+  var line=document.createElement('div'); line.className='divider-line';
+  div.appendChild(r1); div.appendChild(r2); div.appendChild(line);
+  if(result!==null){var r3=document.createElement('div');r3.className='result-num';r3.innerHTML=''+result;div.appendChild(r3);}
+  return div;
+}
+function makeRow(tens,units,faded,green){
+  var row=document.createElement('div'); row.className=faded?'blocks-row faded':'blocks-row';
+  var tc=document.createElement('div'); tc.className='tens-col';
+  for(var i=0;i<tens;i++){var b=document.createElement('div');b.className='ten-bar'+(green?' green':'');tc.appendChild(b);}
+  var sep=document.createElement('div'); sep.className='sep';
+  var uc=document.createElement('div'); uc.className='units-col';
+  var rem=units;
+  while(rem>0){var rs=rem>=5?5:rem;var ur=document.createElement('div');ur.className='units-row';
+    for(var j=0;j<rs;j++){var x=document.createElement('div');x.className='unit-x'+(green?' green':'');ur.appendChild(x);}
+    uc.appendChild(ur);rem-=rs;}
+  row.appendChild(tc);row.appendChild(sep);row.appendChild(uc);return row;
+}
+function makePanel(n1,n2,sT,sU,showResult,total){
+  var p=document.createElement('div'); p.className='right-panel';
+  var p1=document.createElement('div');p1.className='pill pill-blue';p1.innerHTML=''+n1;
+  var pl=document.createElement('div');pl.className='panel-plus';pl.innerHTML='+';
+  var p2=document.createElement('div');p2.className='pill pill-blue';p2.innerHTML=''+n2;
+  var l1=document.createElement('div');l1.className='panel-line';
+  var p3=document.createElement('div');p3.className='pill pill-green';p3.innerHTML=sT+'<br>'+sU;
+  p.appendChild(p1);p.appendChild(pl);p.appendChild(p2);p.appendChild(l1);p.appendChild(p3);
+  if(showResult){
+    var dl=document.createElement('div');dl.className='panel-dline';
+    var ll1=document.createElement('span');ll1.className='panel-line';
+    var ll2=document.createElement('span');ll2.className='panel-line';
+    dl.appendChild(ll1);dl.appendChild(ll2);
+    var p4=document.createElement('div');p4.className='pill pill-filled';p4.innerHTML=''+total;
+    p.appendChild(dl);p.appendChild(p4);
+  } else {
+    var l2=document.createElement('div');l2.className='panel-line';
+    var p4b=document.createElement('div');p4b.className='pill pill-empty';
+    p.appendChild(l2);p.appendChild(p4b);
+  }
+  return p;
+}
+
+/* ===== MODO PRACTICAR ===== */
+gid('btn-practicar').onclick = function(){
+  var n1=parseInt(gid('prac-n1').value)||0;
+  var n2=parseInt(gid('prac-n2').value)||0;
+  if(n1<0||n1>99||n2<0||n2>99){alert('Usa numeros entre 0 y 99');return;}
+  pracData=calcData(n1,n2);
+  pracStepOk=[false,false,false,false];
+  renderPractica();
+};
+
+function renderPractica(){
+  var w=gid('practica-steps'); w.innerHTML='';
+  var d=pracData;
+  var list=getStepList(d);
+  // Determinar cuántos pasos hay y cuál es el índice de cada uno
+  // list = [0,1,(2),3]  stepIds
+  for(var i=0;i<list.length;i++){
+    var unlocked=(i===0)||(pracStepOk[i-1]===true);
+    w.appendChild(buildPracticaCard(list[i],i+1,i,unlocked));
+  }
+  w.scrollIntoView();
+}
+
+function buildPracticaCard(stepId,pNum,idx,unlocked){
+  var d=pracData;
+  var card=document.createElement('div');
+  card.className='practica-card'+(pracStepOk[idx]?' correcto':'')+((!unlocked)?' bloqueado':'');
+
+  var lbl=document.createElement('div');
+  lbl.className='p-label'+(pracStepOk[idx]?' ok':'');
+
+  /* ---- PASO 1: colocar barras y equis para n1 y n2 ---- */
+  if(stepId===0){
+    lbl.innerHTML=(pracStepOk[idx]?'&#10003; ':'')+'Paso '+pNum+' &mdash; Representa los n&uacute;meros';
+    card.appendChild(lbl);
+    card.appendChild(makeVSum(d.n1,d.n2,null));
+
+    var hint=document.createElement('div');
+    hint.style.cssText='font-size:0.82rem;color:#aaa;font-weight:600;margin:12px 0 4px;';
+    hint.innerHTML='Usa + y &minus; para poner las barras y equis de cada n&uacute;mero:';
+    card.appendChild(hint);
+
+    // Controles fila n1
+    card.appendChild(makeBlockControls('p1a','barras de '+d.n1,d.t1,'bars',idx));
+    card.appendChild(makeBlockControls('p1b','equis de '+d.n1,d.u1,'units',idx));
+    // Controles fila n2
+    card.appendChild(makeBlockControls('p1c','barras de '+d.n2,d.t2,'bars',idx));
+    card.appendChild(makeBlockControls('p1d','equis de '+d.n2,d.u2,'units',idx));
+
+    var fb=document.createElement('div'); fb.className='p-feedback'; fb.id='fb-p'+idx; card.appendChild(fb);
+    var btn=document.createElement('button');
+    btn.className='btn-check'+(pracStepOk[idx]?' ok':'');
+    btn.id='chk-p'+idx;
+    btn.innerHTML=pracStepOk[idx]?'&#10003; Correcto':'Comprobar';
+    if(pracStepOk[idx]){btn.disabled=true;}
+    btn.onclick=function(){ checkPaso1(idx); };
+    card.appendChild(btn);
+  }
+
+  /* ---- PASO 2: rellenar panel de decenas/unidades ---- */
+  else if(stepId===1){
+    lbl.innerHTML=(pracStepOk[idx]?'&#10003; ':'')+'Paso '+pNum+' &mdash; Suma decenas y unidades';
+    card.appendChild(lbl);
+
+    var body2=document.createElement('div'); body2.className='step-body';
+    body2.appendChild(makeVSum(d.n1,d.n2,null));
+    // bloques fijos (mostrar la representacion ya resuelta)
+    var ba=document.createElement('div'); ba.className='blocks-area';
+    ba.appendChild(makeRow(d.t1,d.u1,false,false));
+    ba.appendChild(makeRow(d.t2,d.u2,false,false));
+    body2.appendChild(ba);
+
+    // Panel con inputs
+    var pp=document.createElement('div'); pp.className='p-panel-inputs';
+    var pb1=document.createElement('div');pb1.className='pill pill-blue';pb1.innerHTML=''+d.n1;
+    var ppl=document.createElement('div');ppl.className='panel-plus';ppl.innerHTML='+';
+    var pb2=document.createElement('div');pb2.className='pill pill-blue';pb2.innerHTML=''+d.n2;
+    var pl1=document.createElement('div');pl1.className='panel-line';
+
+    // Input decenas
+    var inp1=document.createElement('input');
+    inp1.type='number';inp1.className='p-pill-input';inp1.id='inp-tens-'+idx;
+    inp1.placeholder='?'; inp1.style.width='70px';
+    if(pracStepOk[idx]){inp1.value=d.sumTens;inp1.disabled=true;inp1.className='p-pill-input ok';}
+    inp1.oninput=function(){checkPaso2live(idx);};
+
+    var inpSep=document.createElement('div');inpSep.style.cssText='width:52px;text-align:center;font-size:0.7rem;color:#bbb;font-weight:700;';inpSep.innerHTML='decenas &nbsp; unidades';
+
+    // Input unidades
+    var inp2=document.createElement('input');
+    inp2.type='number';inp2.className='p-pill-input';inp2.id='inp-units-'+idx;
+    inp2.placeholder='?'; inp2.style.width='70px';
+    if(pracStepOk[idx]){inp2.value=d.sumUnits;inp2.disabled=true;inp2.className='p-pill-input ok';}
+    inp2.oninput=function(){checkPaso2live(idx);};
+
+    var pl2=document.createElement('div');pl2.className='panel-line';
+    var pe=document.createElement('div');pe.className='pill pill-empty';
+
+    pp.appendChild(pb1);pp.appendChild(ppl);pp.appendChild(pb2);pp.appendChild(pl1);
+    pp.appendChild(inp1);pp.appendChild(inp2);
+    pp.appendChild(pl2);pp.appendChild(pe);
+    body2.appendChild(pp);
+    card.appendChild(body2);
+
+    var hint2=document.createElement('div');
+    hint2.style.cssText='font-size:0.82rem;color:#aaa;font-weight:600;margin:10px 0 0;';
+    hint2.innerHTML='Escribe cu&aacute;ntas decenas y cu&aacute;ntas unidades suman en total.';
+    card.appendChild(hint2);
+
+    var fb2=document.createElement('div');fb2.className='p-feedback';fb2.id='fb-p'+idx;card.appendChild(fb2);
+  }
+
+  /* ---- PASO 3: reagrupar con nueva barra ---- */
+  else if(stepId===2){
+    var eT=Math.floor(d.sumUnits/10),rU=d.sumUnits%10;
+    var totalT=d.t1+d.t2+eT;
+    lbl.innerHTML=(pracStepOk[idx]?'&#10003; ':'')+'Paso '+pNum+' &mdash; Las equis forman una barra nueva';
+    card.appendChild(lbl);
+
+    var hint3=document.createElement('div');
+    hint3.style.cssText='font-size:0.85rem;color:#888;font-weight:600;margin-bottom:14px;';
+    hint3.innerHTML='<b>'+d.sumUnits+' equis</b> &rarr; <b>'+eT+' barra nueva</b> + <b>'+rU+' equis</b> restantes.<br>Pon el resultado final de barras y equis:';
+    card.appendChild(hint3);
+
+    card.appendChild(makeBlockControls('p3a','barras en total',totalT,'bars',idx));
+    card.appendChild(makeBlockControls('p3b','equis restantes',rU,'units',idx));
+
+    var fb3=document.createElement('div');fb3.className='p-feedback';fb3.id='fb-p'+idx;card.appendChild(fb3);
+    var btn3=document.createElement('button');
+    btn3.className='btn-check'+(pracStepOk[idx]?' ok':'');btn3.id='chk-p'+idx;
+    btn3.innerHTML=pracStepOk[idx]?'&#10003; Correcto':'Comprobar';
+    if(pracStepOk[idx]){btn3.disabled=true;}
+    btn3.onclick=function(){checkPaso3(idx);};
+    card.appendChild(btn3);
+  }
+
+  /* ---- PASO 4: resultado final ---- */
+  else if(stepId===3){
+    var eT4=Math.floor(d.sumUnits/10),rU4=d.sumUnits%10;
+    lbl.innerHTML=(pracStepOk[idx]?'&#10003; ':'')+'Paso '+pNum+' &mdash; Resultado final';
+    card.appendChild(lbl);
+
+    var body4=document.createElement('div'); body4.className='step-body';
+    body4.appendChild(makeVSum(d.n1,d.n2,null));
+    var ba4=document.createElement('div'); ba4.className='blocks-area';
+    ba4.appendChild(makeRow(d.t1+d.t2+eT4,rU4,false,false));
+    body4.appendChild(ba4);
+
+    // Panel con resultado vacío para rellenar
+    var pp4=document.createElement('div'); pp4.className='p-panel-inputs';
+    var pb41=document.createElement('div');pb41.className='pill pill-blue';pb41.innerHTML=''+d.n1;
+    var ppl4=document.createElement('div');ppl4.className='panel-plus';ppl4.innerHTML='+';
+    var pb42=document.createElement('div');pb42.className='pill pill-blue';pb42.innerHTML=''+d.n2;
+    var pl41=document.createElement('div');pl41.className='panel-line';
+    var pg4=document.createElement('div');pg4.className='pill pill-green';pg4.innerHTML=d.sumTens+'<br>'+d.sumUnits;
+    var dl4=document.createElement('div');dl4.className='panel-dline';
+    var dl41=document.createElement('span');dl41.className='panel-line';
+    var dl42=document.createElement('span');dl42.className='panel-line';
+    dl4.appendChild(dl41);dl4.appendChild(dl42);
+
+    var inpRes=document.createElement('input');
+    inpRes.type='number';inpRes.className='p-pill-input-result';inpRes.id='inp-res-'+idx;
+    inpRes.placeholder='?';
+    if(pracStepOk[idx]){inpRes.value=d.total;inpRes.disabled=true;inpRes.className='p-pill-input-result ok';}
+    inpRes.oninput=function(){checkPaso4live(idx);};
+
+    pp4.appendChild(pb41);pp4.appendChild(ppl4);pp4.appendChild(pb42);pp4.appendChild(pl41);
+    pp4.appendChild(pg4);pp4.appendChild(dl4);pp4.appendChild(inpRes);
+    body4.appendChild(pp4);
+    card.appendChild(body4);
+
+    var hint4=document.createElement('div');
+    hint4.style.cssText='font-size:0.82rem;color:#aaa;font-weight:600;margin:10px 0 0;';
+    hint4.innerHTML='Escribe el resultado final de la suma.';
+    card.appendChild(hint4);
+
+    var fb4=document.createElement('div');fb4.className='p-feedback';fb4.id='fb-p'+idx;card.appendChild(fb4);
+    if(pracStepOk[idx]){
+      var confetti=document.createElement('div');
+      confetti.style.cssText='font-size:1.6rem;text-align:center;margin-top:10px;';
+      confetti.innerHTML='&#127881; &#127881; &#127881;';
+      card.appendChild(confetti);
+    }
+  }
+
+  return card;
+}
+
+/* ===== CONTROLES DE BARRAS/EQUIS ===== */
+// Almacena los contadores de cada control
+var pracCounters = {};
+
+function makeBlockControls(id, labelText, target, type, stepIdx){
+  pracCounters[id] = pracCounters[id] !== undefined ? pracCounters[id] : 0;
+  var wrap=document.createElement('div');
+  wrap.style.cssText='margin-bottom:10px;';
+
+  var lbl=document.createElement('div');lbl.className='p-row-label';lbl.innerHTML=labelText;wrap.appendChild(lbl);
+
+  // Zona visual de bloques
+  var visual=document.createElement('div');visual.id='vis-'+id;visual.className='p-blocks-interactive';
+  wrap.appendChild(visual);
+
+  // Botones + / -
+  var stepper=document.createElement('div');stepper.className='p-stepper';
+  var bMinus=document.createElement('button');bMinus.className='btn-minus';bMinus.innerHTML='&minus;';
+  var cnt=document.createElement('span');cnt.className='p-count';cnt.id='cnt-'+id;cnt.innerHTML='0';
+  var bPlus=document.createElement('button');bPlus.className='btn-plus';bPlus.innerHTML='+';
+  var slbl=document.createElement('span');slbl.className='p-stepper-label';
+  slbl.innerHTML=type==='bars'?'barras':'equis';
+
+  bMinus.onclick=function(){
+    if(pracCounters[id]>0){pracCounters[id]--;updateVisual(id,type,target,stepIdx);}
+  };
+  bPlus.onclick=function(){
+    var max=type==='bars'?9:9;
+    if(pracCounters[id]<max){pracCounters[id]++;updateVisual(id,type,target,stepIdx);}
+  };
+
+  stepper.appendChild(bMinus);stepper.appendChild(cnt);stepper.appendChild(bPlus);stepper.appendChild(slbl);
+  wrap.appendChild(stepper);
+  updateVisual(id,type,target,stepIdx);
+  return wrap;
+}
+
+function updateVisual(id,type,target,stepIdx){
+  var vis=gid('vis-'+id);
+  var cnt=gid('cnt-'+id);
+  if(!vis||!cnt){return;}
+  var val=pracCounters[id];
+  cnt.innerHTML=''+val;
+  vis.innerHTML='';
+  var correct=(val===target);
+
+  if(type==='bars'){
+    var tc=document.createElement('div');tc.className='tens-col';
+    for(var i=0;i<Math.max(val,1);i++){
+      var b=document.createElement('div');
+      if(i<val){b.className='ten-bar'+(correct?' green':'');}
+      else{b.className='ten-bar ghost';b.style.cssText='background:transparent;border:2px dashed #eee;width:15px;height:52px;border-radius:4px;display:inline-block;';}
+      tc.appendChild(b);
+    }
+    if(val===0){tc.innerHTML='<div style="width:15px;height:52px;border:2px dashed #ddd;border-radius:4px;display:inline-block;"></div>';}
+    vis.appendChild(tc);
+  } else {
+    var uc=document.createElement('div');uc.className='units-col';
+    var rem=Math.max(val,0);
+    if(rem===0){
+      var ur0=document.createElement('div');ur0.className='units-row';
+      var xg=document.createElement('div');xg.style.cssText='width:20px;height:20px;border:2px dashed #ddd;border-radius:3px;display:inline-block;';
+      ur0.appendChild(xg);uc.appendChild(ur0);
+    } else {
+      while(rem>0){var rs=rem>=5?5:rem;
+        var ur=document.createElement('div');ur.className='units-row';
+        for(var j=0;j<rs;j++){
+          var x=document.createElement('div');x.className='unit-x'+(correct?' green':'');ur.appendChild(x);
+        }
+        uc.appendChild(ur);rem-=rs;
+      }
+    }
+    vis.appendChild(uc);
+  }
+}
+
+/* ===== VERIFICACIONES ===== */
+function showFb(idx,ok,msg){
+  var fb=gid('fb-p'+idx);if(!fb){return;}
+  fb.className='p-feedback '+(ok?'ok':'err');
+  fb.innerHTML=msg;
+}
+
+function checkPaso1(idx){
+  var d=pracData;
+  var ok=(pracCounters['p1a']===d.t1)&&(pracCounters['p1b']===d.u1)&&
+         (pracCounters['p1c']===d.t2)&&(pracCounters['p1d']===d.u2);
+  if(ok){
+    pracStepOk[idx]=true;
+    showFb(idx,true,'&#10003; ¡Correcto! Puedes continuar con el siguiente paso.');
+    var btn=gid('chk-p'+idx);if(btn){btn.innerHTML='&#10003; Correcto';btn.className='btn-check ok';btn.disabled=true;}
+    setTimeout(function(){renderPractica();},600);
+  } else {
+    var msgs=[];
+    if(pracCounters['p1a']!==d.t1){msgs.push('Las barras de '+d.n1+' deben ser '+d.t1+'.');}
+    if(pracCounters['p1b']!==d.u1){msgs.push('Las equis de '+d.n1+' deben ser '+d.u1+'.');}
+    if(pracCounters['p1c']!==d.t2){msgs.push('Las barras de '+d.n2+' deben ser '+d.t2+'.');}
+    if(pracCounters['p1d']!==d.u2){msgs.push('Las equis de '+d.n2+' deben ser '+d.u2+'.');}
+    showFb(idx,false,'&#10007; '+msgs.join(' '));
+  }
+}
+
+function checkPaso2live(idx){
+  var d=pracData;
+  var v1=parseInt(gid('inp-tens-'+idx).value);
+  var v2=parseInt(gid('inp-units-'+idx).value);
+  var ok1=(v1===d.sumTens), ok2=(v2===d.sumUnits);
+  var i1=gid('inp-tens-'+idx), i2=gid('inp-units-'+idx);
+  if(!isNaN(v1)){i1.className='p-pill-input '+(ok1?'ok':(gid('inp-tens-'+idx).value===''?'':'err'));}
+  if(!isNaN(v2)){i2.className='p-pill-input '+(ok2?'ok':(gid('inp-units-'+idx).value===''?'':'err'));}
+  if(ok1&&ok2){
+    pracStepOk[idx]=true;
+    showFb(idx,true,'&#10003; ¡Correcto!');
+    i1.disabled=true;i2.disabled=true;
+    setTimeout(function(){renderPractica();},700);
+  }
+}
+
+function checkPaso3(idx){
+  var d=pracData;
+  var eT=Math.floor(d.sumUnits/10),rU=d.sumUnits%10;
+  var totalT=d.t1+d.t2+eT;
+  var ok=(pracCounters['p3a']===totalT)&&(pracCounters['p3b']===rU);
+  if(ok){
+    pracStepOk[idx]=true;
+    showFb(idx,true,'&#10003; ¡Correcto!');
+    var btn=gid('chk-p'+idx);if(btn){btn.innerHTML='&#10003; Correcto';btn.className='btn-check ok';btn.disabled=true;}
+    setTimeout(function(){renderPractica();},600);
+  } else {
+    var msgs3=[];
+    if(pracCounters['p3a']!==totalT){msgs3.push('Barras: deben ser '+totalT+'.');}
+    if(pracCounters['p3b']!==rU){msgs3.push('Equis: deben ser '+rU+'.');}
+    showFb(idx,false,'&#10007; '+msgs3.join(' '));
+  }
+}
+
+function checkPaso4live(idx){
+  var d=pracData;
+  var v=parseInt(gid('inp-res-'+idx).value);
+  var inp=gid('inp-res-'+idx);
+  if(isNaN(v)){return;}
+  inp.className='p-pill-input-result '+(v===d.total?'ok':(inp.value===''?'':'err'));
+  if(v===d.total){
+    pracStepOk[idx]=true;
+    showFb(idx,true,'&#127881; &#127881; ¡Perfecto! '+d.n1+' + '+d.n2+' = '+d.total);
+    inp.disabled=true;
+    setTimeout(function(){renderPractica();},600);
+  }
+}
+
+/* ===== RESET CONTADORES AL EMPEZAR ===== */
+var _origBtnPrac=gid('btn-practicar').onclick;
+gid('btn-practicar').onclick=function(){
+  pracCounters={};
+  _origBtnPrac();
+};
+</script>
+</body>
+</html>
